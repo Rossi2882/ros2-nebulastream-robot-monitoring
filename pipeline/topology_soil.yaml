@@ -1,0 +1,43 @@
+query: |
+  SELECT TEMP_10CM, TEMP_20CM FROM SOILTEMP WHERE TEMP_10CM > FLOAT64(25.0) INTO SOILALERTS
+
+sinks:
+  - name: SOILALERTS
+    host: worker-2:8080
+    schema:
+      - name: SOILTEMP$TEMP_10CM
+        type: FLOAT64
+      - name: SOILTEMP$TEMP_20CM
+        type: FLOAT64
+    type: MQTT
+    config:
+      output_format: CSV
+      server_uri: mqtt-broker
+      topic: soil/alerts
+      qos: 1
+
+logical:
+  - name: SOILTEMP
+    schema:
+      - name: TEMP_10CM
+        type: FLOAT64
+      - name: TEMP_20CM
+        type: FLOAT64
+
+physical:
+  - logical: SOILTEMP
+    host: worker-2:8080
+    parser_config:
+      type: CSV
+      fieldDelimiter: ","
+    type: MQTT
+    source_config:
+      server_uri: mqtt-broker
+      topic: soil/data
+      flush_interval_ms: 2000
+      qos: 1
+
+workers:
+  - host: worker-2:8080
+    data_address: worker-2:9090
+    max_operators: 10000

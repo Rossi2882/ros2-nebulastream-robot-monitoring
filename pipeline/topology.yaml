@@ -1,0 +1,50 @@
+query: |
+  SELECT ROBOT_ID, LATITUDE, LONGITUDE, ALTITUDE FROM ROBOTGPS WHERE LONGITUDE < FLOAT64(3.4249509) OR LONGITUDE > FLOAT64(3.4304526) OR LATITUDE < FLOAT64(46.3378456) OR LATITUDE > FLOAT64(46.3408670) INTO ALERTS
+sinks:
+  - name: ALERTS
+    host: worker-1:8080
+    schema:
+      - name: ROBOTGPS$ROBOT_ID
+        type: UINT64
+      - name: ROBOTGPS$LATITUDE
+        type: FLOAT64
+      - name: ROBOTGPS$LONGITUDE
+        type: FLOAT64
+      - name: ROBOTGPS$ALTITUDE
+        type: FLOAT64
+    type: MQTT
+    config:
+      output_format: CSV
+      server_uri: mqtt-broker
+      topic: robot/alerts
+      qos: 1
+
+logical:
+  - name: ROBOTGPS
+    schema:
+      - name: ROBOT_ID
+        type: UINT64
+      - name: LATITUDE
+        type: FLOAT64
+      - name: LONGITUDE
+        type: FLOAT64
+      - name: ALTITUDE
+        type: FLOAT64
+
+physical:
+  - logical: ROBOTGPS
+    host: worker-1:8080
+    parser_config:
+      type: CSV
+      fieldDelimiter: ","
+    type: MQTT
+    source_config:
+      server_uri: mqtt-broker
+      topic: robot/gps
+      flush_interval_ms: 100
+      qos: 1
+
+workers:
+  - host: worker-1:8080
+    data_address: worker-1:9090
+    max_operators: 10000

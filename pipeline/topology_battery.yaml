@@ -1,0 +1,49 @@
+query: |
+  SELECT ROBOT_ID, VOLTAGE, PERCENTAGE FROM ROBOTBATTERY WHERE PERCENTAGE < FLOAT64(0.70) INTO BATTERYALERTS
+
+sinks:
+  - name: BATTERYALERTS
+    host: worker-4:8080
+    schema:
+      - name: ROBOTBATTERY$ROBOT_ID
+        type: UINT64
+      - name: ROBOTBATTERY$VOLTAGE
+        type: FLOAT64
+      - name: ROBOTBATTERY$PERCENTAGE
+        type: FLOAT64
+    type: MQTT
+    config:
+      output_format: CSV
+      server_uri: mqtt-broker
+      topic: robot/battery_alerts
+      qos: 1
+
+logical:
+  - name: ROBOTBATTERY
+    schema:
+      - name: ROBOT_ID
+        type: UINT64
+      - name: VOLTAGE
+        type: FLOAT64
+      - name: PERCENTAGE
+        type: FLOAT64
+      - name: CURRENT
+        type: FLOAT64
+
+physical:
+  - logical: ROBOTBATTERY
+    host: worker-4:8080
+    parser_config:
+      type: CSV
+      fieldDelimiter: ","
+    type: MQTT
+    source_config:
+      server_uri: mqtt-broker
+      topic: robot/battery
+      flush_interval_ms: 1000
+      qos: 1
+
+workers:
+  - host: worker-4:8080
+    data_address: worker-4:9090
+    max_operators: 10000

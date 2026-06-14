@@ -1,0 +1,195 @@
+services:
+  mqtt-broker:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    healthcheck:
+      test: ["CMD", "mosquitto_pub", "-h", "localhost", "-t", "healthcheck", "-m", "test", "-q", "1"]
+      interval: 2s
+      timeout: 3s
+      retries: 5
+  worker-1:
+    image: nebulastream/worker:mqtt
+    working_dir: /workdir
+    command:
+      - "--grpc=worker-1:8080"
+      - "--data_address=worker-1:9090"
+      - "--worker.default_query_execution.execution_mode=COMPILER"
+      - "--worker.query_engine.number_of_worker_threads=4"
+    healthcheck:
+      test: ["CMD", "/bin/grpc_health_probe", "-addr=worker-1:8080", "-connect-timeout", "5s"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    volumes:
+      - .:/workdir
+  worker-2:
+    image: nebulastream/worker:mqtt
+    working_dir: /workdir
+    command:
+      - "--grpc=worker-2:8080"
+      - "--data_address=worker-2:9090"
+      - "--worker.default_query_execution.execution_mode=COMPILER"
+      - "--worker.query_engine.number_of_worker_threads=4"
+    healthcheck:
+      test: ["CMD", "/bin/grpc_health_probe", "-addr=worker-2:8080", "-connect-timeout", "5s"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    volumes:
+      - .:/workdir
+  worker-3:
+    image: nebulastream/worker:mqtt
+    working_dir: /workdir
+    command:
+      - "--grpc=worker-3:8080"
+      - "--data_address=worker-3:9090"
+      - "--worker.default_query_execution.execution_mode=COMPILER"
+      - "--worker.query_engine.number_of_worker_threads=4"
+    healthcheck:
+      test: ["CMD", "/bin/grpc_health_probe", "-addr=worker-3:8080", "-connect-timeout", "5s"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    volumes:
+      - .:/workdir
+  worker-4:
+    image: nebulastream/worker:mqtt
+    working_dir: /workdir
+    command:
+      - "--grpc=worker-4:8080"
+      - "--data_address=worker-4:9090"
+      - "--worker.default_query_execution.execution_mode=COMPILER"
+      - "--worker.query_engine.number_of_worker_threads=4"
+    healthcheck:
+      test: ["CMD", "/bin/grpc_health_probe", "-addr=worker-4:8080", "-connect-timeout", "5s"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    volumes:
+      - .:/workdir
+  worker-5:
+    image: nebulastream/worker:mqtt
+    working_dir: /workdir
+    command:
+      - "--grpc=worker-5:8080"
+      - "--data_address=worker-5:9090"
+      - "--worker.default_query_execution.execution_mode=COMPILER"
+      - "--worker.query_engine.number_of_worker_threads=4"
+    healthcheck:
+      test: ["CMD", "/bin/grpc_health_probe", "-addr=worker-5:8080", "-connect-timeout", "5s"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    volumes:
+      - .:/workdir
+  nes-cli:
+    image: nebulastream/nes-cli:mqtt
+    working_dir: /workdir
+    environment:
+      NES_TOPOLOGY_FILE: /workdir/topology.yaml
+      XDG_STATE_HOME: /workdir/.xdg-state
+    entrypoint: ["sleep", "infinity"]
+    volumes:
+      - .:/workdir
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      worker-1:
+        condition: service_healthy
+  nes-cli-2:
+    image: nebulastream/nes-cli:mqtt
+    working_dir: /workdir
+    environment:
+      NES_TOPOLOGY_FILE: /workdir/topology_soil.yaml
+      XDG_STATE_HOME: /workdir/.xdg-state-2
+    entrypoint: ["sleep", "infinity"]
+    volumes:
+      - .:/workdir
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      worker-2:
+        condition: service_healthy
+  nes-cli-3:
+    image: nebulastream/nes-cli:mqtt
+    working_dir: /workdir
+    environment:
+      NES_TOPOLOGY_FILE: /workdir/topology_odom.yaml
+      XDG_STATE_HOME: /workdir/.xdg-state-3
+    entrypoint: ["sleep", "infinity"]
+    volumes:
+      - .:/workdir
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      worker-3:
+        condition: service_healthy
+  nes-cli-4:
+    image: nebulastream/nes-cli:mqtt
+    working_dir: /workdir
+    environment:
+      NES_TOPOLOGY_FILE: /workdir/topology_battery.yaml
+      XDG_STATE_HOME: /workdir/.xdg-state-4
+    entrypoint: ["sleep", "infinity"]
+    volumes:
+      - .:/workdir
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      worker-4:
+        condition: service_healthy
+  nes-cli-5:
+    image: nebulastream/nes-cli:mqtt
+    working_dir: /workdir
+    environment:
+      NES_TOPOLOGY_FILE: /workdir/topology_collision.yaml
+      XDG_STATE_HOME: /workdir/.xdg-state-5
+    entrypoint: ["sleep", "infinity"]
+    volumes:
+      - .:/workdir
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      worker-5:
+        condition: service_healthy
+  influxdb:
+    image: influxdb:2.7
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: adminpass
+      DOCKER_INFLUXDB_INIT_ORG: robotics
+      DOCKER_INFLUXDB_INIT_BUCKET: geofencing
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: mytoken123
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+  telegraf:
+    image: telegraf:1.30
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    depends_on:
+      - mqtt-broker
+      - influxdb
+  grafana:
+    image: grafana/grafana:10.4.0
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - influxdb
+volumes:
+  influxdb-data:
+  grafana-data:

@@ -1,0 +1,47 @@
+query: |
+  SELECT ROBOT_ID, LINEAR_X, ANGULAR_Z FROM ROBOTODOM WHERE LINEAR_X > FLOAT64(0.10) INTO ODOMALERTS
+
+sinks:
+  - name: ODOMALERTS
+    host: worker-3:8080
+    schema:
+      - name: ROBOTODOM$ROBOT_ID
+        type: UINT64
+      - name: ROBOTODOM$LINEAR_X
+        type: FLOAT64
+      - name: ROBOTODOM$ANGULAR_Z
+        type: FLOAT64
+    type: MQTT
+    config:
+      output_format: CSV
+      server_uri: mqtt-broker
+      topic: robot/odom_alerts
+      qos: 1
+
+logical:
+  - name: ROBOTODOM
+    schema:
+      - name: ROBOT_ID
+        type: UINT64
+      - name: LINEAR_X
+        type: FLOAT64
+      - name: ANGULAR_Z
+        type: FLOAT64
+
+physical:
+  - logical: ROBOTODOM
+    host: worker-3:8080
+    parser_config:
+      type: CSV
+      fieldDelimiter: ","
+    type: MQTT
+    source_config:
+      server_uri: mqtt-broker
+      topic: robot/odom
+      flush_interval_ms: 500
+      qos: 1
+
+workers:
+  - host: worker-3:8080
+    data_address: worker-3:9090
+    max_operators: 10000

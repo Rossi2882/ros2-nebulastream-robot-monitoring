@@ -1,0 +1,70 @@
+query: |
+  SELECT ROBOT_ID, LATITUDE, LONGITUDE FROM ROBOTGPS2 JOIN ROBOTGPS3 INTO COLLISIONALERTS
+
+sinks:
+  - name: COLLISIONALERTS
+    host: worker-5:8080
+    schema:
+      - name: ROBOTGPS2$ROBOT_ID
+        type: UINT64
+      - name: ROBOTGPS2$LATITUDE
+        type: FLOAT64
+      - name: ROBOTGPS2$LONGITUDE
+        type: FLOAT64
+    type: MQTT
+    config:
+      output_format: CSV
+      server_uri: mqtt-broker
+      topic: robot/collision_alerts
+      qos: 1
+
+logical:
+  - name: ROBOTGPS2
+    schema:
+      - name: ROBOT_ID
+        type: UINT64
+      - name: LATITUDE
+        type: FLOAT64
+      - name: LONGITUDE
+        type: FLOAT64
+      - name: ALTITUDE
+        type: FLOAT64
+  - name: ROBOTGPS3
+    schema:
+      - name: ROBOT_ID
+        type: UINT64
+      - name: LATITUDE
+        type: FLOAT64
+      - name: LONGITUDE
+        type: FLOAT64
+      - name: ALTITUDE
+        type: FLOAT64
+
+physical:
+  - logical: ROBOTGPS2
+    host: worker-5:8080
+    parser_config:
+      type: CSV
+      fieldDelimiter: ","
+    type: MQTT
+    source_config:
+      server_uri: mqtt-broker
+      topic: robot/gps/2
+      flush_interval_ms: 100
+      qos: 1
+  - logical: ROBOTGPS3
+    host: worker-5:8080
+    parser_config:
+      type: CSV
+      fieldDelimiter: ","
+    type: MQTT
+    source_config:
+      server_uri: mqtt-broker
+      topic: robot/gps/3
+      flush_interval_ms: 100
+      qos: 1
+
+workers:
+  - host: worker-5:8080
+    data_address: worker-5:9090
+    max_operators: 10000
