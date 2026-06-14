@@ -211,7 +211,6 @@ python3 ~/magisterka/plot_perf_results.py
 | Broker MQTT latency | 1.8 – 11 ms (scales with fleet size) |
 | NebulaStream latency | ~45 – 75 ms (stable, independent of fleet/frequency) |
 | End-to-end latency (pub→alert) | ~50 – 85 ms |
-| NebulaStream JOIN support | Not supported in `worker:mqtt` version |
 
 ## Known Limitations
 
