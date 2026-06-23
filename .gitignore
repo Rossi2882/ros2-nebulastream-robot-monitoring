@@ -5,3 +5,4 @@ __pycache__/
 pipeline/.xdg-state*/
 pipeline/influxdb-data/
 *.log
+rerun_*.sh
