@@ -240,13 +240,6 @@ python3 analyze_repeated.py
 | NebulaStream latency | ~45 – 75 ms (stable, independent of fleet size and frequency) |
 | End-to-end latency (pub→alert) | ~50 – 85 ms |
 
-## Known Limitations
-
-- **NebulaStream JOIN** — The `worker:mqtt` image does not support JOIN between two streams. Collision detection is therefore implemented as a separate Python service.
-- **NebulaStream query stacking** — `nes-cli start` adds a new query without stopping the previous one. Always restart the worker before starting a new query to avoid duplicate processing.
-- **Geofencing** — Implemented as bounding box rather than point-in-polygon due to NebulaStream SQL limitations.
-- **Latency measurement accuracy** — Measurements at high frequencies (>50 Hz) are approximate due to the inability to inject message identifiers through NebulaStream.
-
 ## Grafana Dashboard
 
 The **Robot Monitoring** dashboard includes 5 panels:
