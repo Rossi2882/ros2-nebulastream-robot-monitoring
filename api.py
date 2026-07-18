@@ -31,14 +31,14 @@ app = FastAPI(
     title="Agricultural Robot Fleet Monitoring API",
     description=(
         "REST API for real-time monitoring of an agricultural robot fleet.\n\n"
-        "**Pipeline:** ROS2 bags → MQTT bridge → NebulaStream (stream processing) → Telegraf → InfluxDB\n\n"
+        ""
         "**Alert types:**\n"
         "- Geofencing — robot exits parcel 567 PAL boundary (bounding box)\n"
         "- Speed — robot exceeds velocity threshold (0.10 m/s)\n"
         "- Battery — battery level drops below threshold (20%)\n"
         "- Soil temperature — SMT100 sensor exceeds 25°C\n"
         "- Collision risk — two robots within 2m of each other\n\n"
-        "**Data source:** Real GPS field data from Montoldre, France (RTK Septentrio, 10 Hz)"
+        "**Data source:** Real GPS field data from Montoldre, France (RTK Septentrio, 10 Hz) and synthetic test bags with ground truth"
     ),
     version="1.0.0",
 )

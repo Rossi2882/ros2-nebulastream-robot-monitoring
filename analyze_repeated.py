@@ -68,8 +68,8 @@ def aggregate(rows):
         valid.sort(key=lambda r: r['e2e_avg_ms'])
 
         if len(valid) > OUTLIERS_DROP:
-            kept   = valid[:-OUTLIERS_DROP]
-            dropped = valid[-OUTLIERS_DROP:]
+            kept   = valid[1:-1]
+            dropped = [valid[0], valid[-1]]
             print(f"    Dropped outliers (highest e2e): "
                   f"{[round(r['e2e_avg_ms'], 1) for r in dropped]} ms")
         else:
@@ -156,46 +156,47 @@ def errorbars(serie, mean_key, std_key):
 
 
 def make_fleet_chart(fleet, out_path):
-    fig, axes = plt.subplots(1, 3, figsize=(17, 5))
-    fig.suptitle(
-        f'Fleet axis — impact of number of robots (10 Hz)\n'
-        f'Mean ± std of {KEEP} runs (2 outliers removed)',
-        fontsize=13, fontweight='bold', y=1.03)
-
     xv = [int(r['n_robots']) for r in fleet]
     xl = [str(v) for v in xv]
-
-    # Panel 1: Throughput
-    ax = axes[0]
     idx = list(range(len(xv)))
     w = 0.35
+
+    fig, ax = plt.subplots(figsize=(8, 5))
     ax.bar([i - w/2 for i in idx], vals(fleet, 'throughput_pub_mean'),
-           width=w, color=C_PUB, alpha=0.85, label='Published (msg/s)')
+           width=w, color=C_PUB, alpha=0.85, label='Input: GPS messages')
     ax.bar([i + w/2 for i in idx], vals(fleet, 'throughput_alert_mean'),
-           width=w, color=C_ALERT, alpha=0.85, label='NebulaStream alerts (alert/s)')
+           width=w, color=C_ALERT, alpha=0.85, label='Output: alerts')
     ax.set_xlabel('Number of robots')
     ax.set_ylabel('Messages / second')
-    ax.set_title('Throughput')
+    ax.set_title('Fleet axis - Throughput (10 Hz)')
     ax.legend(fontsize=9)
     ax.set_xticks(idx)
     ax.set_xticklabels(xl)
+    plt.tight_layout()
+    p = str(out_path).replace('perf_fleet_final', 'perf_fleet_throughput_final')
+    plt.savefig(p, dpi=150, bbox_inches='tight')
+    print(f"Saved: {p}")
+    plt.close()
 
-    # Panel 2: End-to-end latency with error bars
-    ax = axes[1]
+    fig, ax = plt.subplots(figsize=(8, 5))
     means, stds = errorbars(fleet, 'e2e_avg_ms_mean', 'e2e_avg_ms_std')
     ax.errorbar(xv, means, yerr=stds, fmt='o-', color=C_E2E,
-                capsize=4, label='avg ± std (ms)')
+                capsize=4, label='avg +/- std (ms)')
     p95_means, p95_stds = errorbars(fleet, 'e2e_p95_ms_mean', 'e2e_p95_ms_std')
     ax.errorbar(xv, p95_means, yerr=p95_stds, fmt='s--', color=C_P95,
-                capsize=4, label='p95 ± std (ms)')
+                capsize=4, label='p95 +/- std (ms)')
     ax.set_xlabel('Number of robots')
     ax.set_ylabel('Latency (ms)')
-    ax.set_title('End-to-end latency (pub→alert)')
+    ax.set_title('Fleet axis - End-to-end latency (10 Hz)')
     ax.legend(fontsize=9)
     ax.set_xticks(xv)
+    plt.tight_layout()
+    p = str(out_path).replace('perf_fleet_final', 'perf_fleet_latency_final')
+    plt.savefig(p, dpi=150, bbox_inches='tight')
+    print(f"Saved: {p}")
+    plt.close()
 
-    # Panel 3: Latency breakdown with error bars
-    ax = axes[2]
+    fig, ax = plt.subplots(figsize=(8, 5))
     broker_means, broker_stds = errorbars(fleet, 'broker_avg_ms_mean', 'broker_avg_ms_std')
     nebula_means, nebula_stds = errorbars(fleet, 'nebula_avg_ms_mean', 'nebula_avg_ms_std')
     ax.bar(xl, broker_means, yerr=broker_stds, label='Broker MQTT',
@@ -204,57 +205,57 @@ def make_fleet_chart(fleet, out_path):
            label='NebulaStream', color=C_NEBULA, alpha=0.85, capsize=3)
     ax.set_xlabel('Number of robots')
     ax.set_ylabel('Latency avg (ms)')
-    ax.set_title('Latency breakdown per component')
+    ax.set_title('Fleet axis - Latency breakdown per component (10 Hz)')
     ax.legend(fontsize=9)
-
     plt.tight_layout()
-    plt.savefig(out_path, dpi=150, bbox_inches='tight')
-    print(f"Saved: {out_path}")
+    p = str(out_path).replace('perf_fleet_final', 'perf_fleet_components_final')
+    plt.savefig(p, dpi=150, bbox_inches='tight')
+    print(f"Saved: {p}")
     plt.close()
 
-
 def make_freq_chart(freq, out_path):
-    fig, axes = plt.subplots(1, 3, figsize=(17, 5))
-    fig.suptitle(
-        f'Frequency axis — impact of Hz per robot (3 robots)\n'
-        f'Mean ± std of {KEEP} runs (2 outliers removed)',
-        fontsize=13, fontweight='bold', y=1.03)
-
     xv = [int(r['hz']) for r in freq]
     xl = [str(v) for v in xv]
-
-    # Panel 1: Throughput
-    ax = axes[0]
     idx = list(range(len(xv)))
     w = 0.35
+
+    fig, ax = plt.subplots(figsize=(8, 5))
     ax.bar([i - w/2 for i in idx], vals(freq, 'throughput_pub_mean'),
-           width=w, color=C_PUB, alpha=0.85, label='Published (msg/s)')
+           width=w, color=C_PUB, alpha=0.85, label='Input: GPS messages')
     ax.bar([i + w/2 for i in idx], vals(freq, 'throughput_alert_mean'),
-           width=w, color=C_ALERT, alpha=0.85, label='NebulaStream alerts (alert/s)')
+           width=w, color=C_ALERT, alpha=0.85, label='Output: alerts')
     ax.set_xlabel('Frequency (Hz)')
     ax.set_ylabel('Messages / second')
-    ax.set_title('Throughput')
+    ax.set_title('Frequency axis - Throughput (3 robots)')
     ax.legend(fontsize=9)
     ax.set_xticks(idx)
     ax.set_xticklabels(xl)
+    plt.tight_layout()
+    p = str(out_path).replace('perf_freq_final', 'perf_freq_throughput_final')
+    plt.savefig(p, dpi=150, bbox_inches='tight')
+    print(f"Saved: {p}")
+    plt.close()
 
-    # Panel 2: End-to-end latency with error bars
-    ax = axes[1]
+    fig, ax = plt.subplots(figsize=(8, 5))
     means, stds = errorbars(freq, 'e2e_avg_ms_mean', 'e2e_avg_ms_std')
     ax.errorbar(xv, means, yerr=stds, fmt='o-', color=C_E2E,
-                capsize=4, label='avg ± std (ms)')
+                capsize=4, label='avg +/- std (ms)')
     p95_means, p95_stds = errorbars(freq, 'e2e_p95_ms_mean', 'e2e_p95_ms_std')
     ax.errorbar(xv, p95_means, yerr=p95_stds, fmt='s--', color=C_P95,
-                capsize=4, label='p95 ± std (ms)')
+                capsize=4, label='p95 +/- std (ms)')
     ax.set_xlabel('Frequency (Hz)')
     ax.set_ylabel('Latency (ms)')
-    ax.set_title('End-to-end latency (pub→alert)')
+    ax.set_title('Frequency axis - End-to-end latency (3 robots)')
     ax.legend(fontsize=9)
     ax.set_xticks(xv)
     ax.set_xticklabels(xl)
+    plt.tight_layout()
+    p = str(out_path).replace('perf_freq_final', 'perf_freq_latency_final')
+    plt.savefig(p, dpi=150, bbox_inches='tight')
+    print(f"Saved: {p}")
+    plt.close()
 
-    # Panel 3: Latency breakdown with error bars
-    ax = axes[2]
+    fig, ax = plt.subplots(figsize=(8, 5))
     broker_means, broker_stds = errorbars(freq, 'broker_avg_ms_mean', 'broker_avg_ms_std')
     nebula_means, nebula_stds = errorbars(freq, 'nebula_avg_ms_mean', 'nebula_avg_ms_std')
     ax.bar(xl, broker_means, yerr=broker_stds, label='Broker MQTT',
@@ -263,24 +264,16 @@ def make_freq_chart(freq, out_path):
            label='NebulaStream', color=C_NEBULA, alpha=0.85, capsize=3)
     ax.set_xlabel('Frequency (Hz)')
     ax.set_ylabel('Latency avg (ms)')
-    ax.set_title('Latency breakdown per component')
+    ax.set_title('Frequency axis - Latency breakdown per component (3 robots)')
     ax.legend(fontsize=9)
-
     plt.tight_layout()
-    plt.savefig(out_path, dpi=150, bbox_inches='tight')
-    print(f"Saved: {out_path}")
+    p = str(out_path).replace('perf_freq_final', 'perf_freq_components_final')
+    plt.savefig(p, dpi=150, bbox_inches='tight')
+    print(f"Saved: {p}")
     plt.close()
 
-
 def make_components_chart(fleet, freq, out_path):
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-    fig.suptitle(
-        f'Component contribution to end-to-end latency\n'
-        f'Mean ± std of {KEEP} runs (2 outliers removed)',
-        fontsize=13, fontweight='bold', y=1.03)
-
-    # Left: fleet axis
-    ax = axes[0]
+    fig, ax = plt.subplots(figsize=(8, 5))
     xv = [int(r['n_robots']) for r in fleet]
     broker_m, broker_s = errorbars(fleet, 'broker_avg_ms_mean', 'broker_avg_ms_std')
     nebula_m, nebula_s = errorbars(fleet, 'nebula_avg_ms_mean', 'nebula_avg_ms_std')
@@ -293,12 +286,16 @@ def make_components_chart(fleet, freq, out_path):
                 capsize=3, label='End-to-end')
     ax.set_xlabel('Number of robots')
     ax.set_ylabel('Latency avg (ms)')
-    ax.set_title('Fleet axis (10 Hz)')
+    ax.set_title('Component contribution - Fleet axis (10 Hz)')
     ax.legend()
     ax.set_xticks(xv)
+    plt.tight_layout()
+    p = str(out_path).replace('perf_components_final', 'perf_components_fleet_final')
+    plt.savefig(p, dpi=150, bbox_inches='tight')
+    print(f"Saved: {p}")
+    plt.close()
 
-    # Right: frequency axis
-    ax = axes[1]
+    fig, ax = plt.subplots(figsize=(8, 5))
     xv = [int(r['hz']) for r in freq]
     broker_m, broker_s = errorbars(freq, 'broker_avg_ms_mean', 'broker_avg_ms_std')
     nebula_m, nebula_s = errorbars(freq, 'nebula_avg_ms_mean', 'nebula_avg_ms_std')
@@ -311,14 +308,16 @@ def make_components_chart(fleet, freq, out_path):
                 capsize=3, label='End-to-end')
     ax.set_xlabel('Frequency (Hz)')
     ax.set_ylabel('Latency avg (ms)')
-    ax.set_title('Frequency axis (3 robots)')
+    ax.set_title('Component contribution - Frequency axis (3 robots)')
     ax.legend()
     ax.set_xticks(xv)
     ax.set_xticklabels([str(v) for v in xv])
-
     plt.tight_layout()
-    plt.savefig(out_path, dpi=150, bbox_inches='tight')
-    print(f"Saved: {out_path}")
+    p = str(out_path).replace('perf_components_final', 'perf_components_freq_final')
+    plt.savefig(p, dpi=150, bbox_inches='tight')
+    print(f"Saved: {p}")
+    plt.close()
+
     plt.close()
 
 

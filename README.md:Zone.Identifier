@@ -1,0 +1,4 @@
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=https://claude.ai/chat/10f71fdd-562d-4cf5-876a-e0eafdcac970
+HostUrl=https://claude.ai/api/organizations/8b9acc12-4ebf-42f0-bc5a-bc1ee3481c42/conversations/10f71fdd-562d-4cf5-876a-e0eafdcac970/wiggle/download-file?path=%2Fmnt%2Fuser-data%2Foutputs%2FREADME.md

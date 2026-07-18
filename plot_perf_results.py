@@ -80,9 +80,9 @@ ax = axes[0]
 xl_idx = list(range(len(xv)))
 w = 0.35
 ax.bar([x - w/2 for x in xl_idx], vals(fleet, 'throughput_pub'),
-       width=w, color=C_PUB, alpha=0.85, label='Published (msg/s)')
+       width=w, color=C_PUB, alpha=0.85, label='Input: GPS messages')
 ax.bar([x + w/2 for x in xl_idx], vals(fleet, 'throughput_alert'),
-       width=w, color=C_ALERT, alpha=0.85, label='NebulaStream alerts (alert/s)')
+       width=w, color=C_ALERT, alpha=0.85, label='Output: alerts')
 ax.set_xlabel('Number of robots')
 ax.set_ylabel('Messages / second')
 ax.set_title('Throughput')
@@ -132,9 +132,9 @@ ax = axes[0]
 idx = list(range(len(xv)))
 w = 0.35
 ax.bar([i - w/2 for i in idx], vals(freq, 'throughput_pub'),
-       width=w, color=C_PUB, alpha=0.85, label='Published (msg/s)')
+       width=w, color=C_PUB, alpha=0.85, label='Input: GPS messages')
 ax.bar([i + w/2 for i in idx], vals(freq, 'throughput_alert'),
-       width=w, color=C_ALERT, alpha=0.85, label='NebulaStream alerts (alert/s)')
+       width=w, color=C_ALERT, alpha=0.85, label='Output: alerts')
 ax.set_xticks(idx)
 ax.set_xticklabels([str(v) for v in xv])
 ax.set_xlabel('Frequency (Hz)')
